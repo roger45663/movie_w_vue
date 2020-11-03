@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="apptitle">Vue.js Theater</div>
+      <div class="movie" @wheel.prevent="Wheel">
+        <div class="cards" :class="{ isCartOpen: isCartOpen }">
+          <div class="card" v-for="movie in movies">
+            <div class="left">
+              <div class="cover" :style="bgcss(movie.cover)"></div>
+            </div>
+            <div class="right">
+              <h2>{{ movie.name }}</h2>
+              <h4>{{ movie.type }}</h4>
+              <p v-html="movie.description"></p>
+              <div class="price">{{ movie.price }}$</div>
+              <button class="add" @click="addCart(movie, $event)">
+                +Add to My Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="buybox"
+        :style="bgcss(currentMovie.cover)"
+        v-if="currentMovie"
+      ></div>
+      <div class="fixed-control" @click="(isCartOpen = !isCartOpen)">
+        <i class="fa fa-shopping-cart"></i><span>{{ cart.length }}</span>
+      </div>
+      <div class="control" :class="{ isCartOpen: isCartOpen }">
+        <div class="panel">
+          <h2>My Movie Cart</h2>
+          <ul>
+            <li v-for="(movie,mid) in cart">
+              <div class="thumbnail" :style="bgcss(movie.cover)"></div>
+              <h3>
+                {{ movie.name }}
+                <div class="price">{{ movie.price }}$</div>
+                <div class="remove" @click="cart.splice(mid, 1)">-</div>
+              </h3>
+            </li>
+            <li v-if="!cart.length">
+              <h3>Your Cart is empty!</h3>
+            </li>
+          </ul>
+          <hr />
+          <h2>{{ totalPrice }}$</h2>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="./js/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.5.1/gsap.min.js"></script>
+    <script>
+      const { ref, reactive, computed, watch } = Vue;
+      const App = {
+        setup() {
+          const isCartOpen = ref(false);
+          const movies = reactive([
+            {
+              name: "Blade Runner 2045",
+              description:
+                "Blade Runner 2049 is a 2017 American neo-noir science fiction film directed by Denis Villeneuve and written by Hampton Fancher and Michael Green.",
+              cover:
+                "https://imgc.allpostersimages.com/img/posters/blade-runner-2049-fire-ice_u-L-F9524N0.jpg?src=gp&w=300&h=375",
+              open: false,
+              price: 30,
+              type: "Drama, Action",
+            },
+            {
+              name: "Logan",
+              description:
+                "Blade Runner 2049 is a 2017 American neo-noir science fiction film directed by Denis Villeneuve and written by Hampton Fancher and Michael Green.",
+              cover:
+                "http://www.joblo.com/posters/images/full/logan-poster-3.jpg",
+              open: false,
+              price: 50,
+              type: "Drama, Action",
+            },
+            {
+              name: "JAMES 127 Hours",
+              description:
+                "Blade Runner 2049 is a 2017 American neo-noir science fiction film directed by Denis Villeneuve and written by Hampton Fancher and Michael Green.",
+              cover:
+							"http://cdn.collider.com/wp-content/uploads/127_hours_movie_poster_large_01.jpg",
+              open: false,
+              price: 80,
+              type: "Drama, Action",
+            },
+            {
+              name: "Harry Potter",
+              description:
+                "Harry Potter is a series of fantasy novels written by British author J. K. Rowling.",
+              cover:
+                "https://i.pinimg.com/originals/61/2b/bf/612bbfe53a59beb87e6dd2e8047d2866.jpg",
+              open: false,
+              price: 150,
+              type: "Drama, Action",
+            },
+          ]);
+          const cart = reactive([]);
+          const currentMovie = ref(null);
+
+          const bgcss = (url) => {
+            return {
+              "background-image": "url(" + url + ")",
+              "background-size": "cover",
+              "background-position": "center center",
+            };
+          };
+
+          const addCart = (movie, evt) => {
+            currentMovie.value = movie;
+            let target = evt.target;
+            TweenMax.from(".buybox", 0.8, {
+              left: $(evt.target).offset().left,
+              top: $(evt.target).offset().top,
+              opacity: 1,
+              ease: Power1.easeOut,
+            });
+            setTimeout(() => {
+              cart.push(movie);
+            }, 800);
+          };
+
+          const totalPrice = computed(() => {
+            return cart
+              .map((movie) => movie.price)
+              .reduce((total, p) => total + p, 0);
+          });
+
+          watch(
+            movies,
+            (newData) => {
+              // console.log(newData);
+            },
+            { deep: true }
+          );
+
+          const Wheel = (e) => {
+            TweenMax.to(".cards", 0.8, {
+              left: "+=" + e.deltaY * 2 + "px",
+            });
+          };
+
+          return {
+            isCartOpen,
+            movies,
+            cart,
+            currentMovie,
+            Wheel,
+            bgcss,
+            totalPrice,
+            addCart,
+          };
+        },
+        created() {
+          let apiUrl =
+            "https://awiclass.monoame.com/api/command.php?type=get&name=movies";
+          axios.get(apiUrl).then((res) => {
+            this.movies = res.data;
+						console.log(this.movies);
+          });
+        },
+      };
+      Vue.createApp(App).mount("#app");
+    </script>
+  </body>
+</html>

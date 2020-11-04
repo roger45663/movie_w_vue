@@ -11,7 +11,7 @@
       <div class="apptitle">Vue.js Theater</div>
       <div class="movie" @wheel.prevent="Wheel">
         <div class="cards" :class="{ isCartOpen: isCartOpen }">
-          <div class="card" v-for="movie in movies">
+          <div class="card" v-for="movie in movies.data">
             <div class="left">
               <div class="cover" :style="bgcss(movie.cover)"></div>
             </div>
@@ -62,52 +62,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.5.1/gsap.min.js"></script>
     <script>
-      const { ref, reactive, computed, watch } = Vue;
+      const { ref, reactive, computed, onMounted } = Vue;
       const App = {
         setup() {
+          const apiUrl = "https://awiclass.monoame.com/api/command.php?type=get&name=movies";
           const isCartOpen = ref(false);
-          const movies = reactive([
-            {
-              name: "Blade Runner 2045",
-              description:
-                "Blade Runner 2049 is a 2017 American neo-noir science fiction film directed by Denis Villeneuve and written by Hampton Fancher and Michael Green.",
-              cover:
-                "https://imgc.allpostersimages.com/img/posters/blade-runner-2049-fire-ice_u-L-F9524N0.jpg?src=gp&w=300&h=375",
-              open: false,
-              price: 30,
-              type: "Drama, Action",
-            },
-            {
-              name: "Logan",
-              description:
-                "Blade Runner 2049 is a 2017 American neo-noir science fiction film directed by Denis Villeneuve and written by Hampton Fancher and Michael Green.",
-              cover:
-                "http://www.joblo.com/posters/images/full/logan-poster-3.jpg",
-              open: false,
-              price: 50,
-              type: "Drama, Action",
-            },
-            {
-              name: "JAMES 127 Hours",
-              description:
-                "Blade Runner 2049 is a 2017 American neo-noir science fiction film directed by Denis Villeneuve and written by Hampton Fancher and Michael Green.",
-              cover:
-							"http://cdn.collider.com/wp-content/uploads/127_hours_movie_poster_large_01.jpg",
-              open: false,
-              price: 80,
-              type: "Drama, Action",
-            },
-            {
-              name: "Harry Potter",
-              description:
-                "Harry Potter is a series of fantasy novels written by British author J. K. Rowling.",
-              cover:
-                "https://i.pinimg.com/originals/61/2b/bf/612bbfe53a59beb87e6dd2e8047d2866.jpg",
-              open: false,
-              price: 150,
-              type: "Drama, Action",
-            },
-          ]);
+          const movies = reactive({data: []});
           const cart = reactive([]);
           const currentMovie = ref(null);
 
@@ -139,19 +99,18 @@
               .reduce((total, p) => total + p, 0);
           });
 
-          watch(
-            movies,
-            (newData) => {
-              // console.log(newData);
-            },
-            { deep: true }
-          );
-
           const Wheel = (e) => {
             TweenMax.to(".cards", 0.8, {
               left: "+=" + e.deltaY * 2 + "px",
             });
           };
+
+          onMounted(() => {
+            axios.get(apiUrl).then((res) => {
+              movies.data = res.data;
+              console.log(movies);
+            });
+          })
 
           return {
             isCartOpen,
@@ -163,14 +122,6 @@
             totalPrice,
             addCart,
           };
-        },
-        created() {
-          let apiUrl =
-            "https://awiclass.monoame.com/api/command.php?type=get&name=movies";
-          axios.get(apiUrl).then((res) => {
-            this.movies = res.data;
-						console.log(this.movies);
-          });
         },
       };
       Vue.createApp(App).mount("#app");
